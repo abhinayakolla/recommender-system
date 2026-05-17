@@ -13,7 +13,13 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-export const login = (data) => API.post("/auth/login", data);
+export const login = async (data) => {
+  const response = await API.post("/auth/login", data);
+  localStorage.setItem("token", response.data.token);
+  localStorage.setItem("user", JSON.stringify(response.data.user));
+  window.location.href = "/dashboard";
+  return response;
+};
 export const register = (data) => API.post("/auth/register", data);
 export const getMe = () => API.get("/auth/me");
 export const updateMe = (data) => API.put("/auth/me", data);
