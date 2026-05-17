@@ -1,0 +1,44 @@
+# render.yaml — Render Blueprint
+# This file tells Render how to deploy all your services automatically
+# Place this file in the ROOT of your project
+
+services:
+  # ── Backend Service (Node.js) ──────────────────────────────────────────────
+  - type: web
+    name: mtech-rl-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: JWT_SECRET
+        generateValue: true        # Render auto-generates a secure random secret
+      - key: MONGO_URI
+        fromDatabase:
+          name: mtech-mongo
+          property: connectionString
+      - key: ALLOWED_ORIGINS
+        value: https://mtech-rl-frontend.onrender.com
+    healthCheckPath: /api/health
+
+  # ── Frontend Service (Static React) ───────────────────────────────────────
+  - type: web
+    name: mtech-rl-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+# ── MongoDB Database ──────────────────────────────────────────────────────────
+databases:
+  - name: mtech-mongo
+    databaseName: mtech_rl_rec
+    user: mtech_user

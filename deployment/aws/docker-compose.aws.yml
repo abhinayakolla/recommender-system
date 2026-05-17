@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:6
+    container_name: mtech_mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: mtech_rl_rec
+    networks:
+      - mtech_network
+
+  backend:
+    build: ../../backend
+    container_name: mtech_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    env_file:
+      - ../../backend/.env
+    depends_on:
+      - mongodb
+    networks:
+      - mtech_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build: ../../frontend
+    container_name: mtech_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - mtech_network
+
+networks:
+  mtech_network:
+    driver: bridge
+
+volumes:
+  mongo_data:
+    driver: local
